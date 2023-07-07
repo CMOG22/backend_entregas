@@ -18,7 +18,7 @@ router.post("/", async (req, res) => {
 
   // Verificar que todos los campos requeridos estén presentes
   if (!title || !description || !code || !price || !stock || !category) {
-    return res.status(400).json({ error400: "All fields are required" });
+    return res.status(400).json({ error: "All fields are required" });
   }
 
   try {
@@ -27,9 +27,7 @@ router.post("/", async (req, res) => {
 
     // Verificar si ya existe un producto con el mismo código
     if (products.find((product) => product.code === code)) {
-      res
-        .status(409)
-        .json({ error409: `The product with code: ${code} already exists` });
+      res.status(409).json({ error: `The product with code: ${code} already exists` });
     } else {
       // Agregar un nuevo producto utilizando el método 'addProduct' del 'ProductManager'
       await productManager.addProduct(
@@ -44,40 +42,45 @@ router.post("/", async (req, res) => {
       res.status(201).json("Product created successfully");
     }
   } catch (err) {
-    res.status(500).json({ error500: "Error creating product" });
+    res.status(500).json({ error: "Error creating product" });
   }
 });
 
 // Definir una ruta GET en la raíz ('/') del enrutador
 router.get("/", async (req, res) => {
   // Obtener el parámetro 'limit' de la consulta
-  const { limit } = req.query;
+  const limit = parseInt(req.query.limit);
+
   try {
     // Obtener todos los productos utilizando el método 'getProducts' del 'ProductManager'
     const products = await productManager.getProducts();
 
     // Verificar si se proporcionó el parámetro 'limit'
-    if (!limit || limit < 1) {
-      res.status(200).json(products);
-    } else {
+    if (!isNaN(limit) && limit >= 1) {
       // Obtener un número limitado de productos utilizando el método 'slice' de JavaScript
       const limitedProducts = products.slice(0, limit);
-      res.status(206).json(limitedProducts);
+      res.status(200).json(limitedProducts);
+    } else {
+      res.status(200).json(products);
     }
   } catch (err) {
-    res.status(400).json({ error400: "Bad Request" });
+    res.status(400).json({ error: "Bad Request" });
   }
 });
 
 // Definir una ruta GET con parámetros en el enrutador
 router.get("/:pid", async (req, res) => {
-  let { pid } = req.params;
+  const { pid } = req.params;
   try {
     // Obtener un producto por su ID utilizando el método 'getProductById' del 'ProductManager'
     const product = await productManager.getProductById(Number(pid));
-    res.status(200).json(product);
+    if (product) {
+      res.status(200).json(product);
+    } else {
+      res.status(404).json({ error: "Not Found" });
+    }
   } catch (err) {
-    res.status(404).json({ error404: "Not Found" });
+    res.status(400).json({ error: "Bad Request" });
   }
 });
 
@@ -89,12 +92,12 @@ router.put("/:pid", async (req, res) => {
     // Actualizar un producto utilizando el método 'updateProduct' del 'ProductManager'
     const updatedProduct = await productManager.updateProduct(Number(pid), props);
     if (!updatedProduct) {
-      res.status(404).json({ error404: `Product with id: ${pid} not found.` });
+      res.status(404).json({ error: `Product with id: ${pid} not found.` });
     } else {
       res.status(200).json(updatedProduct);
     }
   } catch (err) {
-    res.status(400).json({ error400: "Bad Request" });
+    res.status(400).json({ error: "Bad Request" });
   }
 });
 
@@ -106,7 +109,7 @@ router.delete("/:pid", async (req, res) => {
     await productManager.deleteProduct(Number(pid));
     res.status(200).json(`Product with id: ${pid} was removed`);
   } catch (err) {
-    res.status(400).json({ error400: "Bad Request" });
+    res.status(400).json({ error: "Bad Request" });
   }
 });
 

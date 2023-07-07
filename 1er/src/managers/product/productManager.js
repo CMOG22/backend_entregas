@@ -10,7 +10,7 @@ class ProductManager {
     // Arreglo para almacenar los productos
     this.products = [];
     // Asignar la ruta del archivo 'products.json'
-    ProductManager.#path;
+    this.path = ProductManager.#path;
   }
 
   // Método privado para obtener el siguiente ID disponible para un producto
@@ -59,7 +59,7 @@ class ProductManager {
 
         // Escribir el arreglo actualizado en el archivo 'products.json'
         await fs.promises.writeFile(
-          ProductManager.#path,
+          this.path,
           JSON.stringify(products, null, "\t")
         );
 
@@ -74,7 +74,7 @@ class ProductManager {
   getProducts = async () => {
     try {
       // Leer el contenido del archivo 'products.json'
-      const data = await fs.promises.readFile(ProductManager.#path, "utf-8");
+      const data = await fs.promises.readFile(this.path, "utf-8");
       // Parsear los datos como un arreglo de productos
       const products = JSON.parse(data);
       // Actualizar el arreglo de productos en la instancia
@@ -91,16 +91,14 @@ class ProductManager {
     const products = await this.getProducts();
     try {
       // Buscar el producto con el ID especificado
-      const itemId = Object.values(products).find(
-        (product) => product.id === id
-      );
+      const product = products.find((product) => product.id === id);
 
-      if (itemId === undefined) {
+      if (product === undefined) {
         console.log("Product does not exist");
-        return "Product does not exist";
+        return null;
       } else {
-        console.log(itemId);
-        return itemId;
+        console.log(product);
+        return product;
       }
     } catch (err) {
       return console.error(err);
@@ -112,9 +110,9 @@ class ProductManager {
     const products = await this.getProducts();
     try {
       // Encontrar el producto con el ID especificado
-      const index = await products.findIndex((product) => product.id === id);
+      const productIndex = products.findIndex((product) => product.id === id);
 
-      if (index === -1) {
+      if (productIndex === -1) {
         return console.log(`Product with id: ${id} does not exist`);
       }
       if (
@@ -125,17 +123,16 @@ class ProductManager {
       }
 
       // Actualizar las propiedades del producto con las proporcionadas
-      Object.assign(products[index], propsProduct);
+      Object.assign(products[productIndex], propsProduct);
 
       // Escribir el arreglo actualizado en el archivo 'products.json'
       await fs.promises.writeFile(
-        ProductManager.#path,
-        JSON.stringify(products),
-        "utf-8"
+        this.path,
+        JSON.stringify(products, null, "\t")
       );
 
       // Obtener el producto actualizado
-      const updatedProduct = products[index];
+      const updatedProduct = products[productIndex];
 
       console.log(updatedProduct);
       return updatedProduct;
@@ -149,18 +146,15 @@ class ProductManager {
     let products = await this.getProducts();
     try {
       // Encontrar el producto con el ID especificado
-      const product = Object.values(products).find(
-        (product) => product.id === id
-      );
+      const productIndex = products.findIndex((product) => product.id === id);
 
-      if (product) {
+      if (productIndex !== -1) {
         // Filtrar los productos para eliminar el producto con el ID especificado
-        products = products.filter((item) => item.id !== id);
+        products.splice(productIndex, 1);
         // Escribir el arreglo actualizado en el archivo 'products.json'
         await fs.promises.writeFile(
-          ProductManager.#path,
-          JSON.stringify(products),
-          "utf-8"
+          this.path,
+          JSON.stringify(products, null, "\t")
         );
 
         return console.log("Product removed");

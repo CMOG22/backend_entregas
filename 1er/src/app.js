@@ -18,6 +18,6 @@ app.use(express.urlencoded({ extended: true }));
 router(app);
 
 // Iniciar el servidor y especificar el número de puerto en el cual escuchará las solicitudes
-app.listen(port, (req, res) => {
+app.listen(port, () => {
   console.log(`Server running at port: ${port}`);
 });

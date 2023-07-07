@@ -1,9 +1,6 @@
 // Importar el módulo 'fs' para trabajar con el sistema de archivos
 const fs = require("fs");
 
-// Definir la ruta del archivo 'carts.json'
-const path = "./mock/carts.json";
-
 // Clase 'CartManager' para manejar la gestión de carritos
 class CartManager {
   // Ruta del archivo 'carts.json' (puede ser modificada según el uso)
@@ -13,7 +10,7 @@ class CartManager {
     // Arreglo para almacenar los carritos
     this.carts = [];
     // Asignar la ruta del archivo 'carts.json'
-    CartManager.#path;
+    this.path = CartManager.#path;
   }
 
   // Método privado para obtener el siguiente ID disponible para un carrito
@@ -41,7 +38,7 @@ class CartManager {
 
       // Escribir el arreglo actualizado en el archivo 'carts.json'
       await fs.promises.writeFile(
-        CartManager.#path,
+        this.path,
         JSON.stringify(carts, null, "\t")
       );
 
@@ -55,13 +52,13 @@ class CartManager {
   getCarts = async () => {
     try {
       // Leer el contenido del archivo 'carts.json'
-      const data = await fs.promises.readFile(CartManager.#path, "utf-8");
+      const data = await fs.promises.readFile(this.path, "utf-8");
       // Parsear los datos como un arreglo de carritos
       const carts = JSON.parse(data);
       // Actualizar el arreglo de carritos en la instancia
       this.carts = carts;
       return carts;
-    } catch {
+    } catch (err) {
       console.log("File not found");
       return [];
     }
@@ -72,14 +69,14 @@ class CartManager {
     const carts = await this.getCarts();
     try {
       // Buscar el carrito con el ID especificado
-      const cartId = Object.values(carts).find((cart) => cart.id === idCart);
+      const cart = carts.find((cart) => cart.id === idCart);
 
-      if (cartId === undefined) {
+      if (cart === undefined) {
         console.error("Cart does not exist");
-        return "Cart does not exist";
+        return null;
       } else {
-        console.log(cartId);
-        return cartId;
+        console.log(cart);
+        return cart;
       }
     } catch (err) {
       return console.error(err);
@@ -91,7 +88,7 @@ class CartManager {
     const carts = await this.getCarts();
     try {
       // Encontrar el carrito con el ID especificado
-      const cart = await carts.find((cart) => cart.id === idCart);
+      const cart = carts.find((cart) => cart.id === idCart);
       if (cart === undefined) {
         return console.log(`Cart with id: ${idCart} does not exist`);
       }
@@ -119,7 +116,7 @@ class CartManager {
 
       // Escribir el arreglo actualizado en el archivo 'carts.json'
       await fs.promises.writeFile(
-        CartManager.#path,
+        this.path,
         JSON.stringify(carts, null, "\t")
       );
 
@@ -134,12 +131,15 @@ class CartManager {
     let carts = await this.getCarts();
     try {
       // Encontrar el carrito con el ID especificado
-      const cart = Object.values(carts).find((cart) => cart.id === idCart);
-      if (cart) {
+      const cartIndex = carts.findIndex((cart) => cart.id === idCart);
+      if (cartIndex !== -1) {
         // Filtrar los carritos para eliminar el carrito con el ID especificado
-        carts = carts.filter((item) => item.id !== idCart);
+        carts.splice(cartIndex, 1);
         // Escribir el arreglo actualizado en el archivo 'carts.json'
-        await fs.promises.writeFile(path, JSON.stringify(carts), "utf-8");
+        await fs.promises.writeFile(
+          this.path,
+          JSON.stringify(carts, null, "\t")
+        );
 
         return console.log("Cart removed");
       } else {
@@ -151,5 +151,5 @@ class CartManager {
   };
 }
 
-// Exportar la clase 'CartManager' para ser utilizada en otros archivos
+// Exportar laclase 'CartManager' para ser utilizada en otros archivos
 module.exports = CartManager;
