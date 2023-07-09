@@ -15,7 +15,7 @@ router.post("/", async (req, res) => {
   try {
     // Crear un nuevo carrito utilizando el método 'createCart' del 'CartManager'
     const newCart = await cartManager.createCart();
-    res.status(201).json("A new cart was created");
+    res.status(201).json({ message: "A new cart was created" });
   } catch (err) {
     res.status(500).json({ error: "Error creating cart" });
   }
@@ -29,7 +29,7 @@ router.post("/:cid/product/:pid", async (req, res) => {
     // Actualizar el carrito utilizando el método 'updateCart' del 'CartManager'
     const update = await cartManager.updateCart(Number(cid), Number(pid), quantity);
     if (update) {
-      res.status(200).json(`The product ${pid} in cart ${cid} was successfully updated`);
+      res.status(200).json({ message: `The product ${pid} in cart ${cid} was successfully updated` });
     } else {
       res.status(404).json({ error: "Not Found" });
     }
@@ -71,7 +71,7 @@ router.delete("/:cid", async (req, res) => {
   try {
     // Eliminar un carrito por su ID utilizando el método 'deleteCart' del 'CartManager'
     await cartManager.deleteCart(Number(cid));
-    res.status(200).json(`Cart with id: ${cid} was removed`);
+    res.status(200).json({ message: `Cart with id: ${cid} was removed` });
   } catch (err) {
     res.status(400).json({ error: "Bad Request" });
   }

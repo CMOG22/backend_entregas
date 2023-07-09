@@ -1,155 +1,172 @@
 // Importar el módulo 'fs' para trabajar con el sistema de archivos
 const fs = require("fs");
 
-// Clase 'CartManager' para manejar la gestión de carritos
-class CartManager {
-  // Ruta del archivo 'carts.json' (puede ser modificada según el uso)
-  static #path = "./mock/carts.json";
+// Clase 'ProductManager' para manejar la gestión de productos
+class ProductManager {
+  // Ruta del archivo 'products.json' (puede ser modificada según el uso)
+  static #path = "./mock/products.json";
 
   constructor() {
-    // Arreglo para almacenar los carritos
-    this.carts = [];
-    // Asignar la ruta del archivo 'carts.json'
-    this.path = CartManager.#path;
+    // Arreglo para almacenar los productos
+    this.products = [];
+    // Asignar la ruta del archivo 'products.json'
+    this.path = ProductManager.#path;
   }
 
-  // Método privado para obtener el siguiente ID disponible para un carrito
-  _getNextId = () => {
-    const count = this.carts.length;
-    const nextId = count > 0 ? this.carts[count - 1].id + 1 : 1;
+  // Método privado para obtener el siguiente ID disponible para un producto
+  _getNextId() {
+    const count = this.products.length;
+    const nextId = count > 0 ? this.products[count - 1].id + 1 : 1;
 
     return nextId;
-  };
+  }
 
-  // Método para crear un nuevo carrito
-  createCart = async () => {
-    // Obtener todos los carritos existentes
-    const carts = await this.getCarts();
+  // Método para agregar un nuevo producto
+  async addProduct(title, description, price, thumbnail, code, stock, category) {
+    // Obtener todos los productos existentes
+    const products = await this.getProducts();
 
     try {
-      // Crear un nuevo carrito con un ID único
-      const cart = {
+      // Crear un nuevo producto con un ID único
+      const product = {
         id: this._getNextId(),
-        products: [],
+        title,
+        description,
+        price,
+        thumbnail,
+        code,
+        stock,
+        category,
+        status: true,
       };
 
-      // Agregar el nuevo carrito al arreglo
-      carts.push(cart);
+      // Verificar si ya existe un producto con el mismo código
+      if (products.find((product) => product.code === code)) {
+        console.log(`The product with code: ${product.code} already exists`);
+        return null;
+      }
 
-      // Escribir el arreglo actualizado en el archivo 'carts.json'
+      // Agregar el nuevo producto al arreglo
+      products.push(product);
+
+      // Escribir el arreglo actualizado en el archivo 'products.json'
       await fs.promises.writeFile(
         this.path,
-        JSON.stringify(carts, null, "\t")
+        JSON.stringify(products, null, "\t")
       );
 
-      return carts;
+      console.log(products);
+      return product;
     } catch (err) {
-      return console.log(err);
+      console.error(err);
+      return null;
     }
-  };
+  }
 
-  // Método para obtener todos los carritos
-  getCarts = async () => {
+  // Método para obtener todos los productos
+  async getProducts() {
     try {
-      // Leer el contenido del archivo 'carts.json'
+      // Leer el contenido del archivo 'products.json'
       const data = await fs.promises.readFile(this.path, "utf-8");
-      // Parsear los datos como un arreglo de carritos
-      const carts = JSON.parse(data);
-      // Actualizar el arreglo de carritos en la instancia
-      this.carts = carts;
-      return carts;
+      // Parsear los datos como un arreglo de productos
+      const products = JSON.parse(data);
+      // Actualizar el arreglo de productos en la instancia
+      this.products = products;
+      return products;
     } catch (err) {
       console.log("File not found");
       return [];
     }
-  };
+  }
 
-  // Método para obtener un carrito por su ID
-  getCartById = async (idCart) => {
-    const carts = await this.getCarts();
+  // Método para obtener un producto por su ID
+  async getProductById(id) {
+    const products = await this.getProducts();
     try {
-      // Buscar el carrito con el ID especificado
-      const cart = carts.find((cart) => cart.id === idCart);
+      // Buscar el producto con el ID especificado
+      const product = products.find((product) => product.id === id);
 
-      if (cart === undefined) {
-        console.error("Cart does not exist");
+      if (product === undefined) {
+        console.log("Product does not exist");
         return null;
-      } else {
-        console.log(cart);
-        return cart;
       }
+
+      console.log(product);
+      return product;
     } catch (err) {
-      return console.error(err);
+      console.error(err);
+      return null;
     }
-  };
+  }
 
-  // Método para actualizar un carrito con un producto y su cantidad
-  updateCart = async (idCart, idProduct, quantity = 1) => {
-    const carts = await this.getCarts();
+  // Método para actualizar un producto con propiedades específicas
+  async updateProduct(id, propsProduct) {
+    const products = await this.getProducts();
     try {
-      // Encontrar el carrito con el ID especificado
-      const cart = carts.find((cart) => cart.id === idCart);
-      if (cart === undefined) {
-        return console.log(`Cart with id: ${idCart} does not exist`);
+      // Encontrar el producto con el ID especificado
+      const productIndex = products.findIndex((product) => product.id === id);
+
+      if (productIndex === -1) {
+        console.log(`Product with id: ${id} does not exist`);
+        return null;
       }
 
-      // Verificar si el carrito ya tiene una lista de productos
-      if (!cart.products) {
-        cart.products = [];
-        return console.log(`The cart does not have products`);
+      if (
+        propsProduct.hasOwnProperty("id") ||
+        propsProduct.hasOwnProperty("code")
+      ) {
+        console.log("Cannot update 'id' or 'code' property");
+        return null;
       }
 
-      // Verificar si el producto ya existe en el carrito
-      const productExist = cart.products.find(
-        (product) => product.id === idProduct
-      );
-      if (productExist) {
-        // Actualizar la cantidad del producto existente
-        productExist.quantity += quantity;
-      } else {
-        // Agregar un nuevo producto al carrito
-        cart.products.push({
-          id: idProduct,
-          quantity,
-        });
-      }
+      // Actualizar las propiedades del producto con las proporcionadas
+      Object.assign(products[productIndex], propsProduct);
 
-      // Escribir el arreglo actualizado en el archivo 'carts.json'
+      // Escribir el arreglo actualizado en el archivo 'products.json'
       await fs.promises.writeFile(
         this.path,
-        JSON.stringify(carts, null, "\t")
+        JSON.stringify(products, null, "\t")
       );
 
-      return cart;
-    } catch (err) {
-      return console.error(err);
-    }
-  };
+      // Obtener el producto actualizado
+      const updatedProduct = products[productIndex];
 
-  // Método para eliminar un carrito por su ID
-  deleteCart = async (idCart) => {
-    let carts = await this.getCarts();
+      console.log(updatedProduct);
+      return updatedProduct;
+    } catch (err) {
+      console.error(err);
+      return null;
+    }
+  }
+
+  // Método para eliminar un producto por su ID
+  async deleteProduct(id) {
+    let products = await this.getProducts();
     try {
-      // Encontrar el carrito con el ID especificado
-      const cartIndex = carts.findIndex((cart) => cart.id === idCart);
-      if (cartIndex !== -1) {
-        // Filtrar los carritos para eliminar el carrito con el ID especificado
-        carts.splice(cartIndex, 1);
-        // Escribir el arreglo actualizado en el archivo 'carts.json'
+      // Encontrar el producto con el ID especificado
+      const productIndex = products.findIndex((product) => product.id === id);
+
+      if (productIndex !== -1) {
+        // Filtrar los productos para eliminar el producto con el ID especificado
+        products.splice(productIndex, 1);
+        // Escribir el arreglo actualizado en el archivo 'products.json'
         await fs.promises.writeFile(
           this.path,
-          JSON.stringify(carts, null, "\t")
+          JSON.stringify(products, null, "\t")
         );
 
-        return console.log("Cart removed");
+        console.log("Product removed");
+        return true;
       } else {
-        return console.error("Cart does not exist");
+        console.error("Product does not exist");
+        return false;
       }
     } catch (err) {
-      return console.error(err);
+      console.error(err);
+      return false;
     }
-  };
+  }
 }
 
-// Exportar laclase 'CartManager' para ser utilizada en otros archivos
-module.exports = CartManager;
+// Exportar la clase 'ProductManager' para ser utilizada en otros archivos
+module.exports = ProductManager;

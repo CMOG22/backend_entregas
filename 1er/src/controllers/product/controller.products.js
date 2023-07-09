@@ -27,7 +27,7 @@ router.post("/", async (req, res) => {
 
     // Verificar si ya existe un producto con el mismo código
     if (products.find((product) => product.code === code)) {
-      res.status(409).json({ error: `The product with code: ${code} already exists` });
+      return res.status(409).json({ error: `The product with code: ${code} already exists` });
     } else {
       // Agregar un nuevo producto utilizando el método 'addProduct' del 'ProductManager'
       await productManager.addProduct(
@@ -39,10 +39,10 @@ router.post("/", async (req, res) => {
         stock,
         category
       );
-      res.status(201).json("Product created successfully");
+      return res.status(201).json({ message: "Product created successfully" });
     }
   } catch (err) {
-    res.status(500).json({ error: "Error creating product" });
+    return res.status(500).json({ error: "Error creating product" });
   }
 });
 
@@ -59,12 +59,12 @@ router.get("/", async (req, res) => {
     if (!isNaN(limit) && limit >= 1) {
       // Obtener un número limitado de productos utilizando el método 'slice' de JavaScript
       const limitedProducts = products.slice(0, limit);
-      res.status(200).json(limitedProducts);
+      return res.status(200).json(limitedProducts);
     } else {
-      res.status(200).json(products);
+      return res.status(200).json(products);
     }
   } catch (err) {
-    res.status(400).json({ error: "Bad Request" });
+    return res.status(400).json({ error: "Bad Request" });
   }
 });
 
@@ -75,12 +75,12 @@ router.get("/:pid", async (req, res) => {
     // Obtener un producto por su ID utilizando el método 'getProductById' del 'ProductManager'
     const product = await productManager.getProductById(Number(pid));
     if (product) {
-      res.status(200).json(product);
+      return res.status(200).json(product);
     } else {
-      res.status(404).json({ error: "Not Found" });
+      return res.status(404).json({ error: "Not Found" });
     }
   } catch (err) {
-    res.status(400).json({ error: "Bad Request" });
+    return res.status(400).json({ error: "Bad Request" });
   }
 });
 
@@ -92,12 +92,12 @@ router.put("/:pid", async (req, res) => {
     // Actualizar un producto utilizando el método 'updateProduct' del 'ProductManager'
     const updatedProduct = await productManager.updateProduct(Number(pid), props);
     if (!updatedProduct) {
-      res.status(404).json({ error: `Product with id: ${pid} not found.` });
+      return res.status(404).json({ error: `Product with id: ${pid} not found.` });
     } else {
-      res.status(200).json(updatedProduct);
+      return res.status(200).json(updatedProduct);
     }
   } catch (err) {
-    res.status(400).json({ error: "Bad Request" });
+    return res.status(400).json({ error: "Bad Request" });
   }
 });
 
@@ -107,9 +107,9 @@ router.delete("/:pid", async (req, res) => {
   try {
     // Eliminar un producto por su ID utilizando el método 'deleteProduct' del 'ProductManager'
     await productManager.deleteProduct(Number(pid));
-    res.status(200).json(`Product with id: ${pid} was removed`);
+    return res.status(200).json({ message: `Product with id: ${pid} was removed` });
   } catch (err) {
-    res.status(400).json({ error: "Bad Request" });
+    return res.status(400).json({ error: "Bad Request" });
   }
 });
 
